@@ -23,14 +23,14 @@
     ],
     "activationEvents": [
         "*",
-        "onCommand:vscode-weather-status.refresh"
+        "onCommand:weather-status.refresh"
     ],
     "main": "./out/extension.js",
     "contributes": {
         "commands": [
             {
-                "command": "vscode-weather-status.weather",
-                "title": "Weather: Refresh"
+                "command": "weather-status.refresh",
+                "title": "Weather Status: refresh"
             }
         ],
         "configuration": {

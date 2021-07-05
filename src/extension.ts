@@ -7,26 +7,16 @@ let myWeatherStatusBarItem: any;
 async function getWeatherData(zip: string) {
     let barWeatherString = 'Currently: ';
 
-    const { zipcode, unit: weatherConfig } = vscode.workspace.getConfiguration('weather');
+    const weatherConfigUnit = vscode.workspace.getConfiguration().get('weather.unit');
+    const weatherConfigZip = vscode.workspace.getConfiguration().get('weather.zipcode');
 
     // will set output of weather to environment language
     let env_lang = vscode.env.language
     let weather_lang = env_lang.split('-')[0]
 
     weather.setLang(weather_lang);
-
-    let unitString: string = 'F';
-    if (weatherConfig.unit = 'F') {
-        weather.setUnits('imperial');
-    }
-    if (weatherConfig.unit == 'C') {
-        weather.setUnits('metric');
-        unitString = 'C'
-    }
-
-    if (weatherConfig.zipcode) {
-        weather.setzip(zipcode);
-    }
+    weather.setUnits(weatherConfigUnit);
+    weather.setZipCode(weatherConfigZip);
 
     weather.setAPPID(APPID);
 
@@ -41,7 +31,7 @@ async function getWeatherData(zip: string) {
             console.log('weather-status temp: ${temp}');
             console.log('weather-status sky: ${sky}');
             console.log('weather-status weather_icon: ${weather_icon}');
-            barWeatherString = `${barWeatherString} ${temp}°${unitString}`;
+            barWeatherString = `${barWeatherString} ${temp}°${weatherConfigUnit}`;
         } else {
             vscode.window.showErrorMessage(err);
         }
@@ -51,19 +41,20 @@ async function getWeatherData(zip: string) {
 
 async function display() {
     if (!myWeatherStatusBarItem) {
-        myWeatherStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+        myWeatherStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right,100);
     }
     myWeatherStatusBarItem.text = await getWeatherData('36116');
     myWeatherStatusBarItem.show();
 }
 
 export async function activate(context: vscode.ExtensionContext) {
-    await display();
-    let disposable = vscode.commands.registerCommand('weather-status.refresh', async () => {
+    context.subscriptions.push(vscode.commands.registerCommand('weather-status.refresh', async () => {
         await display();
-    });
-    context.subscriptions.push(disposable);
+    }));
+
+    // update one time at start up
+    await display();
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
