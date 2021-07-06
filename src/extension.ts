@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 var weatherData = require('openweather-apis');
 
-const APPID = '3fb0fcedf0e65093de7cce2bd68febef'
+const APPID = '3fb0fcedf0e65093de7cce2bd68fecab'
 let myWeatherStatusBarItem: any;
 
 export function activate({ subscriptions }: vscode.ExtensionContext) {
@@ -18,9 +18,9 @@ export function activate({ subscriptions }: vscode.ExtensionContext) {
     display();
 }
 
-function getWeatherData() {
-    let barWeatherString = 'Currently: ';
-
+function getWeatherString(): string {
+    let barWeatherString: string = 'Currently: ';
+    let finalResult: string = '';
     const weatherConfigUnit = vscode.workspace.getConfiguration().get('weather.unit');
     const weatherConfigZip = vscode.workspace.getConfiguration().get('weather.zipcode');
 
@@ -41,24 +41,29 @@ function getWeatherData() {
     weatherData.setAPPID(APPID);
 
     // get weather json object
-    weatherData.getAllWeather(function (err: string, jsonObj: any) {
+    weatherData.getAllWeather(function (err: string, jsonObj: any): any {
         if (!err) {
             let temp = jsonObj.main.temp;
             let sky = jsonObj.weather[0].main;
             let locationName = jsonObj.name;
             let weather_icon = jsonObj.weather[0].icon;
 
-            barWeatherString += `${temp}°${weatherConfigUnit} in ${locationName}`;
-            console.log(barWeatherString);
+            //build path to icon file
+            let iconPath = './weathericons/' + weather_icon + '@2x.png';
+
+            let weatherString = `${temp}°${weatherConfigUnit} - ${locationName}`;
+            console.log(weatherString);
+            finalResult = barWeatherString + weatherString;
+            console.log(finalResult);
         } else {
             vscode.window.showErrorMessage(err);
         }
-        return barWeatherString;
     });
+    return finalResult;
 }
 
 function display() {
-    myWeatherStatusBarItem.text = getWeatherData();
+    myWeatherStatusBarItem.text = getWeatherString();
     myWeatherStatusBarItem.show();
 }
 
