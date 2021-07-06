@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 var weatherData = require('openweather-apis');
 
-const APPID = 'd50b7c190fbb5b85029c36efc346abad'
+const APPID = '3fb0fcedf0e65093de7cce2bd68febef'
 let myWeatherStatusBarItem: any;
 
 export function activate({ subscriptions }: vscode.ExtensionContext) {
@@ -10,7 +10,7 @@ export function activate({ subscriptions }: vscode.ExtensionContext) {
     subscriptions.push(vscode.commands.registerCommand(cmdId, () => {
         display();
     }));
-    myWeatherStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    myWeatherStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
     myWeatherStatusBarItem.command = cmdId;
 
     subscriptions.push(myWeatherStatusBarItem);
@@ -21,8 +21,8 @@ export function activate({ subscriptions }: vscode.ExtensionContext) {
 function getWeatherData() {
     let barWeatherString = 'Currently: ';
 
-    const weatherConfigUnit = vscode.workspace.getConfiguration().get('weatherData.unit');
-    const weatherConfigZip = vscode.workspace.getConfiguration().get('weatherData.zipcode');
+    const weatherConfigUnit = vscode.workspace.getConfiguration().get('weather.unit');
+    const weatherConfigZip = vscode.workspace.getConfiguration().get('weather.zipcode');
 
     // will set output of weather to environment language
     let env_lang = vscode.env.language
@@ -48,7 +48,7 @@ function getWeatherData() {
             let locationName = jsonObj.name;
             let weather_icon = jsonObj.weather[0].icon;
 
-            barWeatherString += `${temp}°${weatherConfigUnit}`;
+            barWeatherString += `${temp}°${weatherConfigUnit} in ${locationName}`;
             console.log(barWeatherString);
         } else {
             vscode.window.showErrorMessage(err);
