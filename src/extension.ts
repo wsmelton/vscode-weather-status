@@ -1,37 +1,55 @@
 import * as vscode from 'vscode';
-var weather = require('openweather-apis');
+var weatherData = require('openweather-apis');
 
 const APPID = 'd50b7c190fbb5b85029c36efc346abad'
 let myWeatherStatusBarItem: any;
 
-async function getWeatherData(zip: string) {
+export function activate({ subscriptions }: vscode.ExtensionContext) {
+
+    const cmdId = 'weather-status.refresh'
+    subscriptions.push(vscode.commands.registerCommand(cmdId, () => {
+        display();
+    }));
+    myWeatherStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    myWeatherStatusBarItem.command = cmdId;
+
+    subscriptions.push(myWeatherStatusBarItem);
+
+    display();
+}
+
+function getWeatherData() {
     let barWeatherString = 'Currently: ';
 
-    const weatherConfigUnit = vscode.workspace.getConfiguration().get('weather.unit');
-    const weatherConfigZip = vscode.workspace.getConfiguration().get('weather.zipcode');
+    const weatherConfigUnit = vscode.workspace.getConfiguration().get('weatherData.unit');
+    const weatherConfigZip = vscode.workspace.getConfiguration().get('weatherData.zipcode');
 
     // will set output of weather to environment language
     let env_lang = vscode.env.language
     let weather_lang = env_lang.split('-')[0]
 
-    weather.setLang(weather_lang);
-    weather.setUnits(weatherConfigUnit);
-    weather.setZipCode(weatherConfigZip);
+    weatherData.setLang(weather_lang);
 
-    weather.setAPPID(APPID);
+    switch (weatherConfigUnit) {
+        case 'C':
+            weatherData.setUnits('metrics');
+        case 'F':
+            weatherData.setUnits('imperial');
+    }
+
+    weatherData.setZipCode(weatherConfigZip);
+    weatherData.setAPPID(APPID);
 
     // get weather json object
-    weather.getAllWeather(function (err: string, jsonObj: any) {
-
+    weatherData.getAllWeather(function (err: string, jsonObj: any) {
         if (!err) {
             let temp = jsonObj.main.temp;
             let sky = jsonObj.weather[0].main;
+            let locationName = jsonObj.name;
             let weather_icon = jsonObj.weather[0].icon;
 
-            console.log('weather-status temp: ${temp}');
-            console.log('weather-status sky: ${sky}');
-            console.log('weather-status weather_icon: ${weather_icon}');
-            barWeatherString = `${barWeatherString} ${temp}°${weatherConfigUnit}`;
+            barWeatherString += `${temp}°${weatherConfigUnit}`;
+            console.log(barWeatherString);
         } else {
             vscode.window.showErrorMessage(err);
         }
@@ -39,21 +57,9 @@ async function getWeatherData(zip: string) {
     });
 }
 
-async function display() {
-    if (!myWeatherStatusBarItem) {
-        myWeatherStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right,100);
-    }
-    myWeatherStatusBarItem.text = await getWeatherData('36116');
+function display() {
+    myWeatherStatusBarItem.text = getWeatherData();
     myWeatherStatusBarItem.show();
-}
-
-export async function activate(context: vscode.ExtensionContext) {
-    context.subscriptions.push(vscode.commands.registerCommand('weather-status.refresh', async () => {
-        await display();
-    }));
-
-    // update one time at start up
-    await display();
 }
 
 // this method is called when your extension is deactivated
